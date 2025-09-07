@@ -1,0 +1,30 @@
+name: ollama-server
+
+services:
+  ollama:
+    build: .
+    container_name: ollama-server
+    ports:
+      - "11434:11434" # Expose Ollama API port to host
+    volumes:
+      - ollama_data:/usr/share/ollama/.ollama # Persist model data
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_PORT=11434
+    restart: unless-stopped
+    networks:
+      - ollama-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s # Increased to allow time for model downloads
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  ollama-network:
+    driver: bridge
